@@ -167,11 +167,21 @@ async function crearTarea(req, res) {
  * @param {object} res Respuesta HTTP.
  */
 async function obtenerTarea(req, res) {
-
   const {idTarea}  = req.params;
-  const tarea = await tareasLogic.getOne(idTarea);
-  res.send(tarea);
-  res.end();
+  try{
+    const tarea = await tareasLogic.getOne(idTarea);
+    res.send(tarea);
+    res.end();
+  }
+  catch(error){
+    res.statusCode = 400;
+    res.send({
+      message: `Can't find objecti with id : ${idTarea}`,
+      details: "This endpoint expected a valid object identifier"
+    });
+    res.end();
+  }
+  
 }
 
 tareasRouter
