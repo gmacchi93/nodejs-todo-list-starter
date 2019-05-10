@@ -1,3 +1,4 @@
+const Tarea = require("../models/tarea");
 
 /**
  * Crea un documento Tarea en la Base de datos.
@@ -6,45 +7,44 @@
  * @returns {Promise<Tarea>} Promise de Tarea creada.
  */
 async function create(tareaModel) {
-  // Esta tarea debe ser creada en la base de datos
-  const tareaCreada = await Promise.resolve(tareaModel);
+  const tarea = new Tarea(tareaModel);
+  const tareaCreada = await tarea.save();
   console.info(`Tarea ${tareaCreada['_id']} creada exitosamente.`);
   return tareaCreada;
 }
 
 async function erase(id) {
-  return await Promise.resolve({});
+  try {
+    await Tarea.remove(id);
+  } catch (error) {
+    console.error(`Error al intentar borrar ${error.name} : ${error.name}`);
+  }
+
+  return;
 }
 
-async function getAll() { 
-  // Estos datos en duro serán reemplazados por llamadas de la base de datos
-  const tareas_dummy = [
-    {
-      "date": "Tue, 16 Apr 2019 14:45:30 GMT",
-      "description": "asdad",
-      "id": 539,
-      "status": "TERMINADO"
-    },
-    {
-      "date": "Tue, 16 Apr 2019 03:34:20 GMT",
-      "description": "perro",
-      "id": 510,
-      "status": "TERMINADO"
-    }
-  ];
-  const tareas = await Promise.resolve(tareas_dummy);
+async function getAll() {
+  const tareas = await Tarea.find();
   console.info(`Se obtuvieron ${tareas.length} tareas.`);
   return tareas;
 }
 
- function getOne(id) {
+async function getOne(id) {
   console.debug(`Obtenienod tarea con id ${id}`);
-  return {};
+  const tarea = await Tarea.findById(`${id}`);
+  console.info(`Se obtuvo la tarea con id ${tarea['_id']}`);
+  return tarea;
 }
 
 
 async function update(id,newValues){
-    return Promise.resolve({});
+    try{
+        const updatedModel = await Tarea.updateOne({_id:id},newValues);
+        return updatedModel;
+    }catch(error){
+        console.error(`Error al intentar actualizar ${error.name} : ${error.name}`);
+    }
+    return null;
 }
 
 module.exports = {

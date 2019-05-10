@@ -3,7 +3,6 @@ const tareasLogic = require("../logic/tareas");
 const bodyParser = require("body-parser");
 
 const tareasRouter = express.Router();
-// Le damos al router la capacidad de interpretar cadenas como objetos JSON
 tareasRouter.use(bodyParser.json());
 
 /**
@@ -125,21 +124,8 @@ async function obtenerTareas(req, res, next) {
     res.end();
     return;
   }
-  // Obtener las tareas
   const tareas = await tareasLogic.getAll();
-  res.send([
-    {
-      "date": "Tue, 16 Apr 2019 14:45:30 GMT",
-      "description": "asdad",
-      "id": 539,
-      "status": "TERMINADO"
-    },
-    {
-      "date": "Tue, 16 Apr 2019 03:34:20 GMT",
-      "description": "perro",
-      "id": 510,
-      "status": "TERMINADO"
-    }]);
+  res.send(tareas);
   res.end();
 }
 
@@ -188,14 +174,9 @@ async function obtenerTarea(req, res) {
   res.end();
 }
 
-// Router que maneje los métodos sobre el root  path /
 tareasRouter
   .route("/")
-  .all((req,res,next) => {
-    res.statusCode = 200;
-    res.setHeader("Content-Type", "application/json");
-    next();
-  })
+  .all(allRequest)
   .options(showOptions)
   .get(obtenerTareas)
   .post(crearTarea)
@@ -208,9 +189,6 @@ tareasRouter
     res.end("DELETE method is not supported on /tasks");
   });
 
-
-// Router que Maneje los endpoints sobre el path /:idTarea
-// Donde idTarea es un identificador de la tarea ejemplo 
 tareasRouter
   .route("/:idTarea")
   .all(allRequest)
