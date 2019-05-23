@@ -18,9 +18,9 @@ tareasRouter.use(bodyParser.json());
  * @param {object} next siguiente middleware a ejecutarse
  */
 function allRequest(req, res, next) {
-  res.statusCode = 200;
-  res.setHeader("Content-Type", "application/json");
-  next();
+    res.statusCode = 200;
+    res.setHeader("Content-Type", "application/json");
+    next();
 }
 
 /**
@@ -30,17 +30,17 @@ function allRequest(req, res, next) {
  * @param {object} next  siguiente middleware a ejecutarse
  */
 function showOptions(req, res, next) {
-  res.setHeader("Access-Control-Allow-Headers", "Accept,Content-Type");
-  res.setHeader("Access-Control-Allow-Methods", "OPTIONS,GET,POST");
-  res.setHeader("Allow", "OPTIONS,GET,POST");
-  res.end();
+    res.setHeader("Access-Control-Allow-Headers", "Accept,Content-Type");
+    res.setHeader("Access-Control-Allow-Methods", "OPTIONS,GET,POST");
+    res.setHeader("Allow", "OPTIONS,GET,POST");
+    res.end();
 }
 
 function showOptionsPerResource(req, res, next) {
-  res.setHeader("Access-Control-Allow-Headers", "Accept,Content-Type");
-  res.setHeader("Access-Control-Allow-Methods", "OPTIONS,GET,DELETE,PUT");
-  res.setHeader("Allow", "OPTIONS,GET,DELETE,PUT");
-  res.end();
+    res.setHeader("Access-Control-Allow-Headers", "Accept,Content-Type");
+    res.setHeader("Access-Control-Allow-Methods", "OPTIONS,GET,DELETE,PUT");
+    res.setHeader("Allow", "OPTIONS,GET,DELETE,PUT");
+    res.end();
 }
 
 /**
@@ -60,20 +60,16 @@ function showOptionsPerResource(req, res, next) {
  * false si es que no cumple los criterios.
  */
 function validAcceptHeader(acceptHeader) {
-  if (!acceptHeader && acceptHeader !== "") {
-    return true;
-  }
+    if (!acceptHeader && acceptHeader !== "") {
+        return true;
+    }
 
-  if (!(acceptHeader instanceof String || typeof acceptHeader === "string")) {
-    return false;
-  }
+    if (!(acceptHeader instanceof String || typeof acceptHeader === "string")) {
+        return false;
+    }
 
-  const acceptedTypes = acceptHeader.split(";").map(h => h.trim());
-  if (acceptedTypes.includes("application/json")) {
-    return true;
-  } else {
-    return false;
-  }
+    const acceptedTypes = acceptHeader.split(";").map(h => h.trim());
+    return acceptedTypes.includes("application/json");
 }
 
 /**
@@ -85,25 +81,21 @@ function validAcceptHeader(acceptHeader) {
  * @returns true si es que el Content-Type es válido o false en caso contrario.
  */
 function validContentTypeHeader(contentTypeHeader) {
-  if (!contentTypeHeader) {
-    return false;
-  }
+    if (!contentTypeHeader) {
+        return false;
+    }
 
-  if (
-    !(
-      contentTypeHeader instanceof String ||
-      typeof contentTypeHeader === "string"
-    )
-  ) {
-    return false;
-  }
+    if (
+        !(
+            contentTypeHeader instanceof String ||
+            typeof contentTypeHeader === "string"
+        )
+    ) {
+        return false;
+    }
 
-  const contentTypes = contentTypeHeader.split(";").map(h => h.trim());
-  if (contentTypes.includes("application/json")) {
-    return true;
-  } else {
-    return false;
-  }
+    const contentTypes = contentTypeHeader.split(";").map(h => h.trim());
+    return contentTypes.includes("application/json");
 }
 
 /**
@@ -113,113 +105,214 @@ function validContentTypeHeader(contentTypeHeader) {
  * @param {object} res Respuesta HTTP
  */
 async function obtenerTareas(req, res, next) {
-  const acceptHeader = req.header("Accept");
-  if (!validAcceptHeader(acceptHeader)) {
-    res.statusCode = 400;
-    res.send({
-      details:
-        "This endpoint only support 'application/json' media type, please verify your `Accept` header ",
-      message: `Media not supported :  ${acceptHeader}`
-    });
+    const acceptHeader = req.header("Accept");
+    if (!validAcceptHeader(acceptHeader)) {
+        res.statusCode = 400;
+        res.send({
+            details:
+                "This endpoint only support 'application/json' media type, please verify your `Accept` header ",
+            message: `Media not supported :  ${acceptHeader}`
+        });
+        res.end();
+        return;
+    }
+    const tareas = await tareasLogic.getAll();
+    res.send(tareas);
     res.end();
-    return;
-  }
-  const tareas = await tareasLogic.getAll();
-  res.send(tareas);
-  res.end();
 }
 
 /**
- * Crea una tarea en la base de datos y retorna el objeto creado con un 
+ * Crea una tarea en la base de datos y retorna el objeto creado con un
  * id válido.
- * 
- * @param {object} req Petición HTTP 
+ *
+ * @param {object} req Petición HTTP
  * @param {object} res Respuesta HTTP
  */
 async function crearTarea(req, res) {
-  const contenTypeHeader = req.header("Content-Type");
-  if (!validContentTypeHeader(contenTypeHeader)) {
-    res.statusCode = 400;
-    res.send({
-      message: `Invalid Content-Type : ${contenTypeHeader}`,
-      details: "This endpoint expected JSON object with attribute `description`"
-    });
-    res.end();
-    return;
-  }
+    const contenTypeHeader = req.header("Content-Type");
+    if (!validContentTypeHeader(contenTypeHeader)) {
+        res.statusCode = 400;
+        res.send({
+            message: `Invalid Content-Type : ${contenTypeHeader}`,
+            details: "This endpoint expected JSON object with attribute `description`"
+        });
+        res.end();
+        return;
+    }
 
-  const jsonBody = req.body;
+    const jsonBody = req.body;
 
-  const modeloACrear = {
-    description: jsonBody.description,
-    status: "PENDIENTE"
-  };
+    if (jsonBody.description !== null && jsonBody.description.length > 0) {
+        const modeloACrear = {
+            description: jsonBody.description,
+            status: "PENDIENTE"
+        };
 
-  const tareaCreada = await tareasLogic.create(modeloACrear);
-  res.send(tareaCreada);
-  res.end();
+        const tareaCreada = await tareasLogic.create(modeloACrear);
+        res.send(tareaCreada);
+        res.end();
+    } else {
+        res.statusCode = 400;
+        res.send({
+            message: `Campo requerido`,
+            details: "description required"
+        });
+        res.end();
+        return;
+    }
+
+
+}
+
+/**
+ * Crea una tarea en la base de datos y retorna el objeto creado con un
+ * id válido.
+ *
+ * @param {object} req Petición HTTP
+ * @param {object} res Respuesta HTTP
+ */
+async function actualizarTarea(req, res) {
+    const contenTypeHeader = req.header("Content-Type");
+    if (!validContentTypeHeader(contenTypeHeader)) {
+        res.statusCode = 400;
+        res.send({
+            message: `Invalid Content-Type : ${contenTypeHeader}`,
+            details: "This endpoint expected JSON object with attribute `description`"
+        });
+        res.end();
+        return;
+    }
+
+
+    const {idTarea} = req.params;
+    const jsonBody = req.body;
+    let error = false;
+    let message = "", title = "";
+    let status = jsonBody.status;
+    let description = jsonBody.description;
+    let camposModificables = {};
+    if ((typeof(status) !== "undefined" && status !== null) || (typeof(status) !== "undefined" && description !== null)) {
+        if (status !== null) {
+            if (["TERMINADO", "PENDIENTE", "CANCELADO"].indexOf(status.toString()) >= 0)
+                camposModificables.status = status.toString();
+            else {
+                error = true;
+                title = "Campo invalido";
+                message = "Status not in [TERMINADO, PENDIENTE, CANCELADO]";
+            }
+        }
+        if (description !== null) {
+            if (description.toString().length > 0)
+                camposModificables.description = description.toString();
+            else {
+                error = true;
+                title = "Campo invalido";
+                message = "description cannot be empty";
+            }
+        }
+
+    } else {
+        error = true;
+        title = "Campo requerido";
+        message = "status or description required";
+
+    }
+    if (error) {
+        res.statusCode = 400;
+        res.send({
+            message: title,
+            details: message
+        });
+        res.end();
+    } else {
+
+        try {
+            const tareaActualizada = await tareasLogic.update(idTarea, camposModificables);
+            const tarea = await tareasLogic.getOne(idTarea);
+            res.send(tarea);
+            res.end();
+
+        } catch (error) {
+            res.statusCode = 400;
+            res.send({
+                message: `Can't find objecti with id : ${idTarea}`,
+                details: "This endpoint expected a valid object identifier"
+            });
+            res.end();
+        }
+    }
 }
 
 /**
  * Obtiene una tarea dado su identificador idTarea
- * 
+ *
  * @param {object} req Petición HTTP.
  * @param {object} res Respuesta HTTP.
  */
 async function obtenerTarea(req, res) {
-  const {idTarea}  = req.params;
-  try{
-    const tarea = await tareasLogic.getOne(idTarea);
-    res.send(tarea);
-    res.end();
-  }
-  catch(error){
-    res.statusCode = 400;
-    res.send({
-      message: `Can't find objecti with id : ${idTarea}`,
-      details: "This endpoint expected a valid object identifier"
-    });
-    res.end();
-  }
-  
+    const {idTarea} = req.params;
+    try {
+        const tarea = await tareasLogic.getOne(idTarea);
+        res.send(tarea);
+        res.end();
+    } catch (error) {
+        res.statusCode = 400;
+        res.send({
+            message: `Can't find objecti with id : ${idTarea}`,
+            details: "This endpoint expected a valid object identifier"
+        });
+        res.end();
+    }
+}
+
+/**
+ * Obtiene una tarea dado su identificador idTarea
+ *
+ * @param {object} req Petición HTTP.
+ * @param {object} res Respuesta HTTP.
+ */
+async function eliminarTarea(req, res) {
+    const {idTarea} = req.params;
+    try {
+        const tarea = await tareasLogic.erase(idTarea);
+        res.send(tarea);
+        res.end();
+    } catch (error) {
+        res.statusCode = 400;
+        res.send({
+            message: `Can't find objecti with id : ${idTarea}`,
+            details: "This endpoint expected a valid object identifier"
+        });
+        res.end();
+    }
+
 }
 
 tareasRouter
-  .route("/")
-  .all(allRequest)
-  .options(showOptions)
-  .get(obtenerTareas)
-  .post(crearTarea)
-  .put((req, res, next) => {
-    res.statusCode = 405;
-    res.end("PUT method is not supported on /tasks");
-  })
-  .delete((req, res, next) => {
-    res.statusCode = 405;
-    res.end("DELETE method is not supported on /tasks");
-  });
+    .route("/")
+    .all(allRequest)
+    .options(showOptions)
+    .get(obtenerTareas)
+    .post(crearTarea)
+    .put((req, res, next) => {
+        res.statusCode = 405;
+        res.end("PUT method is not supported on /tasks");
+    })
+    .delete((req, res, next) => {
+        res.statusCode = 405;
+        res.end("DELETE method is not supported on /tasks");
+    });
 
 tareasRouter
-  .route("/:idTarea")
-  .all(allRequest)
-  .options(showOptionsPerResource)
-  .get(obtenerTarea)
-  .post((req, res, next) => {
-    res.statusCode = 405;
-    res.end("POST operation is not suported on /tareas/" + req.params.idTarea);
-  })
-  .put((req, res, next) => {
-    res.write("Actualizando la tarea: " + req.params.idTarea + "\n");
-    res.end(
-      "Actualizando la tarea: " +
-        req.body.descripcion +
-        " with details: " +
-        req.body.estado
-    );
-  })
-  .delete((req, res, next) => {
-    res.end("Borrando la tarea : " + req.params.idTarea);
-  });
+    .route("/:idTarea")
+    .all(allRequest)
+    .options(showOptionsPerResource)
+    .get(obtenerTarea)
+    .post((req, res, next) => {
+        res.statusCode = 405;
+        res.end("POST operation is not suported on /tareas/" + req.params.idTarea);
+    })
+    .put(actualizarTarea)
+    .delete(eliminarTarea);
 
 module.exports = tareasRouter;
-
